@@ -93,32 +93,52 @@ export function FaqPageContent() {
         <div className="text-left">
           <h1 className="text-4xl font-bold tracking-tight text-primary">FAQ結構化資料產生器</h1>
           <h2 className="text-2xl text-muted-foreground mt-1 mb-4">FAQ Schema Generator</h2>
-          <p className="text-lg text-muted-foreground mt-4">
+          <p className="text-lg text-muted-foreground mt-4 mb-12">
             FAQ 結構化資料的複雜問題，交給AI<br />
             想搞定 AI 時代 SEO的問題，交給好事
           </p>
           
-          <div className="mt-6 space-y-4">
-              <h2 className="text-xl font-semibold text-primary/90">Serper</h2>
+          <Card className="mb-4 shadow-md">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold text-primary/90">Serper</CardTitle>
+            </CardHeader>
+            <CardContent>
               <p className="text-sm text-muted-foreground">
-                  負責依照AI抓取出的關鍵字進行搜尋，找出該關鍵字搜尋結果的常見問題。<br />
-                  請到 Serper 網站註冊一個免費帳號，即有2500次免費使用額度，
-                  <a href="https://serper.dev/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
-                      點我前往
-                  </a>。
+                負責依照AI抓取出的關鍵字進行搜尋，找出該關鍵字搜尋結果的常見問題。<br />
+                請到 Serper 網站註冊一個免費帳號，即有2500次免費使用額度，
+                <a href="https://serper.dev/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">
+                    點我前往
+                </a>。
               </p>
+            </CardContent>
+          </Card>
 
-              <h2 className="text-xl font-semibold text-primary/90">免費使用 Gemini AI</h2>
+          <Card className="shadow-md">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold text-primary/90">免費用OpenRouter 處理FAQ結構化資料</CardTitle>
+            </CardHeader>
+            <CardContent>
               <p className="text-sm text-muted-foreground">
-                  請到<a href="https://aistudio.google.com/apikey" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Google AI Studio</a> 註冊一個免費api key，填入下方Gemini API Key 欄位。
+                請到<strong><a href="https://openrouter.ai/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">OpenRouter</a></strong>官網註冊一個免費帳號，<strong><a href="https://openrouter.ai/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">點我前往</a></strong>，取得你的api key 之後，直接填入右側欄位就好。<br />
+                本專案採用Meta: Llama 4 Maverick (free) 語言模型處理，不會有費用產生，可安心使用。<br />
+                詳情請見：<strong><a href="https://openrouter.ai/meta-llama/llama-4-maverick:free" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://openrouter.ai/meta-llama/llama-4-maverick:free</a></strong>
               </p>
-               <p className="text-xs text-muted-foreground/80">
-                  (Vercel 使用者注意：若在 Vercel 上部署時遇到 API 金鑰相關錯誤，最可靠的方式是在 Vercel 專案設定中設定 <code>GEMINI_API_KEY</code> 環境變數。)
+            </CardContent>
+          </Card>
+          <Card className="shadow-md mt-4">
+            <CardHeader>
+              <CardTitle className="text-xl font-semibold text-primary/90">這小東東是誰開發的？</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <h3 className="text-lg font-semibold text-primary/90 mb-2">好事發生數位</h3>
+              <p className="text-sm text-muted-foreground">
+                AI SEO、n8n AI 自動化教學、整合行銷相關服務，就降。<br />
+                好事官網：<a href="https://ohya.co" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://ohya.co</a><br />
+                Threads: <a href="https://www.threads.net/@ohya.studio" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">@ohya.studio</a><br />
+                聯絡我們：<a href="mailto:service@ohya.co" className="text-primary hover:underline">service@ohya.co</a>
               </p>
-               <p className="text-sm text-muted-foreground mt-2">
-                   SEO、整合行銷相關服務，聯絡我們：<a href="mailto:service@ohya.co" className="text-primary hover:underline">service@ohya.co</a>
-              </p>
-          </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
       <div className="w-2/3">
