@@ -181,7 +181,7 @@ export function FaqPageContent() {
                 name="url"
                 render={({ field }) => (
                   <FormItem>
-                    <FormLabel className="flex items-center"><Link2 className="mr-2 h-4 w-4 text-primary/80" />Target URL</FormLabel>
+                    <FormLabel className="flex items-center"><Link2 className="mr-2 h-4 w-4 text-primary/80" />Target URL(目前僅接受WordPress的文章連結)</FormLabel>
                     <FormControl>
                       <Input placeholder="https://example.com/my-article" {...field} />
                     </FormControl>
