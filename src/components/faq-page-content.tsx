@@ -1,7 +1,7 @@
 
 "use client";
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { faqFormSchema, type FaqFormValues } from '@/lib/schemas';
@@ -41,11 +41,18 @@ export function FaqPageContent() {
   const form = useForm<FaqFormValues>({
     resolver: zodResolver(faqFormSchema),
     defaultValues: {
-      serperApiKey: sessionStorage.getItem('serperApiKey') || '',
-      openRouterApiKey: sessionStorage.getItem('openRouterApiKey') || '',
+      serperApiKey: '',
+      openRouterApiKey: '',
       url: '',
     },
   });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      form.setValue('serperApiKey', sessionStorage.getItem('serperApiKey') || '');
+      form.setValue('openRouterApiKey', sessionStorage.getItem('openRouterApiKey') || '');
+    }
+  }, [form]);
 
   async function onSubmit(values: FaqFormValues) {
     setIsLoading(true);
