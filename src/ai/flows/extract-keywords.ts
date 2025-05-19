@@ -32,7 +32,7 @@ export async function extractTitleKeywords(input: z.infer<typeof ExtractTitleKey
     });
 
     const completion = await openai.chat.completions.create({
-      model: 'meta-llama/llama-4-maverick:free',
+      model: 'google/gemma-3-27b-it:free',
       messages: [
         {
           role: 'system',
@@ -46,14 +46,12 @@ export async function extractTitleKeywords(input: z.infer<typeof ExtractTitleKey
     });
 
     console.log("AI response content:", completion.choices[0].message.content);
-    try {
-      return {
-        keywords: JSON.parse(completion.choices[0].message.content || '[]')
-      };
-    } catch (parseError: any) {
-      console.error("Error parsing AI response as JSON:", parseError);
-      return { keywords: [] };
-    }
+    const content = completion.choices[0].message.content || '[]';
+    const match = content.match(/\[.*\]/);
+    const jsonString = match ? match[0] : '[]';
+    return {
+      keywords: JSON.parse(jsonString)
+    };
   } catch (error: any) {
     console.error("Error extracting keywords:", error);
     return { keywords: [] };

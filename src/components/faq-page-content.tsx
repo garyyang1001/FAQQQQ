@@ -120,8 +120,8 @@ export function FaqPageContent() {
             <CardContent>
               <p className="text-sm text-muted-foreground">
                 請到<strong><a href="https://openrouter.ai/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">OpenRouter</a></strong>官網註冊一個免費帳號，<strong><a href="https://openrouter.ai/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">點我前往</a></strong>，取得你的api key 之後，直接填入右側欄位就好。<br />
-                本專案採用Meta: Llama 4 Maverick (free) 語言模型處理，不會有費用產生，可安心使用。<br />
-                詳情請見：<strong><a href="https://openrouter.ai/meta-llama/llama-4-maverick:free" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://openrouter.ai/meta-llama/llama-4-maverick:free</a></strong>
+                本專案採用Google: Gemma 3 27B (free)語言模型處理，不會有費用產生，可安心使用。<br />
+                詳情請見：<strong><a href="https://openrouter.ai/google/gemma-3-27b-it:free" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">https://openrouter.ai/meta-llama/llama-4-maverick:free</a></strong>
               </p>
             </CardContent>
           </Card>

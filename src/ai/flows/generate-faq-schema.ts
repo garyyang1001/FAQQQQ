@@ -32,11 +32,26 @@ export async function generateFAQSchema(input: z.infer<typeof GenerateFAQSchemaI
     });
 
     const completion = await openai.chat.completions.create({
-      model: 'meta-llama/llama-4-maverick:free',
+      model: 'google/gemma-3-27b-it:free',
       messages: [
         {
           role: 'system',
-          content: `You are an AI SEO expert. Your task is to generate FAQ schema structured data in JSON-LD format, based on the provided page content and "People Also Ask" data. Ensure the generated schema is valid JSON-LD and follows the schema.org FAQPage schema guidelines.`
+          content: `You are an AI SEO expert.
+Your task is to generate FAQ schema structured data in valid JSON-LD format (schema.org/FAQPage) based on the provided page content and People Also Ask data.
+
+Question-rewriting rules (MANDATORY)
+	1.	For every original question, first rewrite it into a conversational, voice-search-friendly form in the same language as the page (use natural pronouns like “我/你/我們”, simple vocabulary, keep it under 20 words).
+	2.	Preserve the original meaning and intent.
+	3.	Use the rewritten version as the acceptedQuestion value in the FAQ schema.
+
+Output rules
+• Return one JSON-LD block only – no markdown fences, no extra text.
+• The JSON must validate against the FAQPage specification (mainEntity list of Question → acceptedAnswer).
+• Each name property = the rewritten question.
+• Each text property = a concise, helpful answer drawn from the page content (40-60 words max, no promotional fluff).
+
+Input
+(placeholders for page content & PAA list)`
         },
         {
           role: 'user',
