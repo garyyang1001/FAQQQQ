@@ -36,7 +36,7 @@ export async function generateFAQSchema(input: z.infer<typeof GenerateFAQSchemaI
       messages: [
         {
           role: 'system',
-          content: `You are an AI SEO expert.
+          content: `You are an AI SEO 專家.
 Your task is to generate FAQ schema structured data in valid JSON-LD format (schema.org/FAQPage) based on the provided page content and People Also Ask data.
 
 Question-rewriting rules (MANDATORY)
