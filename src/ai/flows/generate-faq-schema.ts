@@ -11,10 +11,17 @@
 import { OpenAI } from 'openai';
 import { z } from 'zod';
 
+const SerperPeopleAlsoAskItemSchema = z.object({
+  question: z.string(),
+  snippet: z.string().optional(),
+  title: z.string().optional(),
+  link: z.string().optional(),
+});
+
 const GenerateFAQSchemaInputSchema = z.object({
   titleKeywords: z.string().describe('Keywords extracted from the title of the URL content.'),
   pageContent: z.string().describe('The content of the page from the URL.'),
-  peopleAlsoAsk: z.string().describe('The data from the "People Also Ask" search results.'),
+  peopleAlsoAsk: z.array(SerperPeopleAlsoAskItemSchema).describe('The data from the "People Also Ask" search results.'),
   openRouterApiKey: z.string().min(1).describe('The OpenRouter API Key.'),
 });
 export type GenerateFAQSchemaInput = z.infer<typeof GenerateFAQSchemaInputSchema>;
@@ -37,7 +44,7 @@ export async function generateFAQSchema(input: z.infer<typeof GenerateFAQSchemaI
         {
           role: 'system',
           content: `You are an AI SEO 專家.
-Your task is to generate FAQ schema structured data in valid JSON-LD format (schema.org/FAQPage) based on the provided page content and People Also Ask data.
+Your task is to generate 10 FAQ schema structured data in valid JSON-LD format (schema.org/FAQPage) based on the provided page content and People Also Ask data.
 
 Question-rewriting rules (MANDATORY)
 	1.	For every original question, first rewrite it into a conversational, voice-search-friendly form in the same language as the page (use natural pronouns like “我/你/我們”, simple vocabulary, keep it under 20 words).
@@ -55,7 +62,7 @@ Input
         },
         {
           role: 'user',
-          content: `Title Keywords: ${input.titleKeywords}\nPage Content: ${input.pageContent}\nPeople Also Ask: ${input.peopleAlsoAsk}\n\nOutput the complete JSON-LD schema.`
+          content: `Title Keywords: ${input.titleKeywords}\nPage Content: ${input.pageContent}\nPeople Also Ask: ${JSON.stringify(input.peopleAlsoAsk)}\n\nOutput the complete JSON-LD schema.`
         }
       ]
     });
