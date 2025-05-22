@@ -97,6 +97,47 @@ export function EnhancedFaqPageContent() {
       form.setValue('firecrawlApiKey', sessionStorage.getItem('firecrawlApiKey') || '');  // 新增
     }
   }, [form]);
+// 在這裡添加清理函數
+function cleanFaqSchema(rawSchema: string): string {
+  if (!rawSchema) return '';
+  
+  let cleaned = rawSchema.trim();
+  
+  // 移除開頭的 ```json 標記
+  cleaned = cleaned.replace(/^```json\s*/, '');
+  cleaned = cleaned.replace(/^```\s*/, '');
+  
+  // 移除結尾的 ``` 標記
+  cleaned = cleaned.replace(/```\s*$/, '');
+  
+  // 尋找並移除 --- 分隔符及其後的所有內容
+  const separatorIndex = cleaned.indexOf('---');
+  if (separatorIndex !== -1) {
+    cleaned = cleaned.substring(0, separatorIndex).trim();
+  }
+  
+  // 確保是有效的 JSON 格式
+  try {
+    const parsed = JSON.parse(cleaned);
+    return JSON.stringify(parsed, null, 2);
+  } catch (error) {
+    // 如果 JSON 解析失敗，嘗試提取 JSON 部分
+    const jsonStart = cleaned.indexOf('{');
+    const jsonEnd = cleaned.lastIndexOf('}');
+    
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      const extracted = cleaned.substring(jsonStart, jsonEnd + 1);
+      try {
+        const parsed = JSON.parse(extracted);
+        return JSON.stringify(parsed, null, 2);
+      } catch (retryError) {
+        console.warn('無法解析 JSON:', retryError);
+      }
+    }
+    
+    return cleaned;
+  }
+}
 
   // 處理表單提交 - 新增 Firecrawl
 // 在 enhanced-faq-page-content.tsx 中，替換現有的 onSubmit 函數
@@ -472,16 +513,16 @@ async function onSubmit(values: FaqFormValues) {
                               <TextQuote className="mr-2 h-5 w-5" />
                               JSON-LD FAQ Schema
                             </h3>
-                            <CopyButton textToCopy={resultData.faqSchema}>
-                            複製 Schema
+                            <CopyButton textToCopy={cleanFaqSchema(resultData.faqSchema)}>
+                              複製 Schema
                             </CopyButton>
                           </div>
                           <Textarea
-                            value={resultData.faqSchema}
-                            readOnly
-                            className="min-h-[500px] font-mono text-sm"
-                            placeholder="JSON-LD Schema 將顯示在這裡..."
-                          />
+                             value={cleanFaqSchema(resultData.faqSchema)}
+                             readOnly
+                              className="min-h-[500px] font-mono text-sm"
+                              placeholder="JSON-LD Schema 將顯示在這裡..."
+/>
                         </div>
                       )}
                     </TabsContent>
