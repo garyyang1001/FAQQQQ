@@ -99,18 +99,59 @@ export function EnhancedFaqPageContent() {
   }, [form]);
 
   // 處理表單提交 - 新增 Firecrawl
-  async function onSubmit(values: FaqFormValues) {
-    setIsLoading(true);
-    setError(null);
-    setResultData(null);
+// 在 enhanced-faq-page-content.tsx 中，替換現有的 onSubmit 函數
+async function onSubmit(values: FaqFormValues) {
+  const sessionId = `session-${Date.now()}`;
+  setIsLoading(true);
+  setError(null);
+  setResultData(null);
 
-    // 保存 API Keys - 新增 Firecrawl
-    sessionStorage.setItem('serperApiKey', values.serperApiKey);
-    sessionStorage.setItem('openRouterApiKey', values.openRouterApiKey);
-    sessionStorage.setItem('firecrawlApiKey', values.firecrawlApiKey);  // 新增
+  // 保存 API Keys
+  sessionStorage.setItem('serperApiKey', values.serperApiKey);
+  sessionStorage.setItem('openRouterApiKey', values.openRouterApiKey);
+  sessionStorage.setItem('firecrawlApiKey', values.firecrawlApiKey);
 
-    // ... 其他代碼保持不變
+  console.log('🚀 開始 FAQ 生成流程');
+  console.log('📋 輸入參數:', {
+    url: values.url,
+    hasSerperKey: !!values.serperApiKey,
+    hasOpenRouterKey: !!values.openRouterApiKey,
+    hasFirecrawlKey: !!values.firecrawlApiKey,
+  });
+
+  try {
+    // 調用後端 action
+    console.log('📤 呼叫後端服務...');
+    const result = await generateEnhancedFaqAction(values);
+    
+    console.log('📥 後端回應:', result);
+
+    if (result.error) {
+      console.error('❌ 後端回應錯誤:', result.error);
+      throw new Error(result.error);
+    }
+
+    console.log('✅ FAQ 生成成功');
+    setResultData(result);
+
+  } catch (error: any) {
+    console.error('💥 處理過程中發生錯誤:', error);
+    const errorMessage = error.message || '發生未知錯誤，請檢查控制台獲取詳細資訊';
+    setError(errorMessage);
+    
+    // 顯示更詳細的錯誤信息
+    if (error.message?.includes('API Key')) {
+      setError('API Key 錯誤: ' + error.message);
+    } else if (error.message?.includes('網路')) {
+      setError('網路連線錯誤: ' + error.message);
+    } else if (error.message?.includes('Firecrawl')) {
+      setError('Firecrawl 服務錯誤: ' + error.message);
+    }
+  } finally {
+    setIsLoading(false);
+    console.log('🏁 FAQ 生成流程結束');
   }
+}
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-background to-secondary/20">
