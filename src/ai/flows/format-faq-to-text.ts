@@ -10,6 +10,7 @@
 
 import { OpenAI } from 'openai';
 import { z } from 'zod';
+import { AI_MODEL_CONFIGS } from '@/lib/ai-model-configs';
 
 const FormatFaqToTextInputSchema = z.object({
   jsonLdSchema: z.string().describe('The JSON-LD FAQPage schema string.'),
@@ -30,15 +31,26 @@ export async function formatFaqToText(input: z.infer<typeof FormatFaqToTextInput
     });
 
     const completion = await openai.chat.completions.create({
-      model: 'google/gemma-3-27b-it:free',
+      model: AI_MODEL_CONFIGS.FORMAT_FAQ.model,
+      temperature: AI_MODEL_CONFIGS.FORMAT_FAQ.temperature,
+      top_p: AI_MODEL_CONFIGS.FORMAT_FAQ.top_p,
+      presence_penalty: AI_MODEL_CONFIGS.FORMAT_FAQ.presence_penalty,
+      max_tokens: AI_MODEL_CONFIGS.FORMAT_FAQ.max_tokens,
       messages: [
         {
           role: 'system',
-          content: `You are a text formatting assistant. Your task is to convert the given JSON-LD FAQPage schema into a plain text question and answer format. For each question and answer pair found in the 'mainEntity' array of the JSON-LD, format it strictly as:\n問：[Question text from the 'name' field of the Question object]\n答：[Answer text from the 'text' field of the acceptedAnswer object]\n\nEnsure each Q&A pair is separated by exactly one blank line. If the input JSON-LD is invalid or does not contain FAQ data, return an appropriate message like "Could not parse FAQ content for plain text display."`
+          content: `You are a text formatting assistant. Your task is to convert the given JSON-LD FAQPage schema into a plain text question and answer format. For each question and answer pair found in the 'mainEntity' array of the JSON-LD, format it strictly as:
+問：[Question text from the 'name' field of the Question object]
+答：[Answer text from the 'text' field of the acceptedAnswer object]
+
+Ensure each Q&A pair is separated by exactly one blank line. If the input JSON-LD is invalid or does not contain FAQ data, return an appropriate message like "Could not parse FAQ content for plain text display."`
         },
         {
           role: 'user',
-          content: `JSON-LD Input:\n${input.jsonLdSchema}\n\nPlain Text Output:`
+          content: `JSON-LD Input:
+${input.jsonLdSchema}
+
+Plain Text Output:`
         }
       ]
     });

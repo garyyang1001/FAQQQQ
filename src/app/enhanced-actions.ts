@@ -7,6 +7,7 @@ import { extractTitleKeywords } from '@/ai/flows/extract-keywords';
 import { generateFAQSchema } from '@/ai/flows/generate-faq-schema';
 import { formatFaqToText } from '@/ai/flows/format-faq-to-text';
 import { EnhancedContentAnalyzer } from '@/lib/enhanced-content-analyzer';
+import { AI_MODEL_CONFIGS } from '@/lib/ai-model-configs';
 import type { FaqFormValues } from '@/lib/schemas';
 import type { EnhancedContentAnalysisResult } from '@/lib/enhanced-content-types';
 import { addLogEntry, type LogEntry } from '@/lib/logger';
@@ -247,7 +248,7 @@ ${JSON.stringify(layeredQuestions, null, 2)}
 Google People Also Ask：
 ${JSON.stringify(peopleAlsoAsk.map(item => item.question), null, 2)}
 
-內容主題：${contentInsights.mainTopics?.join(', ')}
+內容主題：${contentInsights.mainTopics?.join('、')}
 
 請進行智慧整合：
 1. 從自主生成的問題中選出最有價值的（優先考慮）
@@ -307,7 +308,12 @@ ${JSON.stringify(peopleAlsoAsk.map(item => item.question), null, 2)}
     });
     
     const completion = await openai.chat.completions.create({
-      model: 'google/gemma-3-27b-it:free',
+      model: AI_MODEL_CONFIGS.SMART_QUESTIONS.model,
+      temperature: AI_MODEL_CONFIGS.SMART_QUESTIONS.temperature,
+      top_p: AI_MODEL_CONFIGS.SMART_QUESTIONS.top_p,
+      frequency_penalty: AI_MODEL_CONFIGS.SMART_QUESTIONS.frequency_penalty,
+      presence_penalty: AI_MODEL_CONFIGS.SMART_QUESTIONS.presence_penalty,
+      max_tokens: AI_MODEL_CONFIGS.SMART_QUESTIONS.max_tokens,
       messages: [
         {
           role: 'system',

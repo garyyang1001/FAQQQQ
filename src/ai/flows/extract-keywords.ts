@@ -10,6 +10,7 @@
 
 import { OpenAI } from 'openai';
 import { z } from 'zod';
+import { AI_MODEL_CONFIGS } from '@/lib/ai-model-configs';
 
 const SYSTEM_PROMPT = `You are an expert in SEO and keyword extraction. Your task is to extract the most relevant keywords from the given title. Return ONLY a JSON array of 3 to 5 keywords. No explanations or additional text. Ensure the output is valid JSON.`;
 
@@ -35,13 +36,19 @@ export async function extractTitleKeywords(input: z.infer<typeof ExtractTitleKey
       baseURL: 'https://openrouter.ai/api/v1'
     });
 
-  const completion = await openai.chat.completions.create({
-      model: 'google/gemma-3-27b-it:free',
+    const completion = await openai.chat.completions.create({
+      model: AI_MODEL_CONFIGS.EXTRACT_KEYWORDS.model,
+      temperature: AI_MODEL_CONFIGS.EXTRACT_KEYWORDS.temperature,
+      top_p: AI_MODEL_CONFIGS.EXTRACT_KEYWORDS.top_p,
+      frequency_penalty: AI_MODEL_CONFIGS.EXTRACT_KEYWORDS.frequency_penalty,
+      max_tokens: AI_MODEL_CONFIGS.EXTRACT_KEYWORDS.max_tokens,
       messages: [
         { role: 'system', content: SYSTEM_PROMPT },
         {
           role: 'user',
-          content: `Title: ${input.title}\n\nReturn ONLY a JSON array of 3 to 5 keywords. For example: ["keyword1","keyword2","keyword3"]`
+          content: `Title: ${input.title}
+
+Return ONLY a JSON array of 3 to 5 keywords. For example: ["keyword1","keyword2","keyword3"]`
         }
       ]
     });

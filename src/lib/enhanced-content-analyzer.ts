@@ -1,6 +1,7 @@
 // src/lib/enhanced-content-analyzer.ts - 最終修復版
 
 import * as cheerio from 'cheerio';
+import { AI_MODEL_CONFIGS } from './ai-model-configs';
 import type {
   EnhancedContentAnalysisResult,
   KeywordAnalysis,
@@ -113,7 +114,11 @@ export class EnhancedContentAnalyzer {
 
     try {
       const completion = await openai.chat.completions.create({
-        model: 'google/gemma-3-27b-it:free',
+        model: AI_MODEL_CONFIGS.CONTENT_ANALYSIS.model,
+        temperature: AI_MODEL_CONFIGS.CONTENT_ANALYSIS.temperature,
+        top_p: AI_MODEL_CONFIGS.CONTENT_ANALYSIS.top_p,
+        frequency_penalty: AI_MODEL_CONFIGS.CONTENT_ANALYSIS.frequency_penalty,
+        max_tokens: AI_MODEL_CONFIGS.CONTENT_ANALYSIS.max_tokens,
         messages: [
           {
             role: 'system',

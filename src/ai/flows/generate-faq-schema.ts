@@ -10,6 +10,7 @@
 
 import { OpenAI } from 'openai';
 import { z } from 'zod';
+import { AI_MODEL_CONFIGS } from '@/lib/ai-model-configs';
 
 const SerperPeopleAlsoAskItemSchema = z.object({
   question: z.string(),
@@ -57,15 +58,19 @@ export async function generateFAQSchema(input: z.infer<typeof GenerateFAQSchemaI
       baseURL: 'https://openrouter.ai/api/v1'
     });
 
-    // Trim page content to keep the prompt lightweight (max 1 000 characters).
+    // Trim page content to keep the prompt lightweight (max 1 000 characters).
     const trimmedContent =
       args.pageContent.length > 1000
         ? args.pageContent.slice(0, 1000) + '…'
         : args.pageContent;
 
     const completion = await openai.chat.completions.create({
-      model: 'google/gemma-3-27b-it:free',
-      temperature: 0.3,
+      model: AI_MODEL_CONFIGS.GENERATE_FAQ_SCHEMA.model,
+      temperature: AI_MODEL_CONFIGS.GENERATE_FAQ_SCHEMA.temperature,
+      top_p: AI_MODEL_CONFIGS.GENERATE_FAQ_SCHEMA.top_p,
+      frequency_penalty: AI_MODEL_CONFIGS.GENERATE_FAQ_SCHEMA.frequency_penalty,
+      presence_penalty: AI_MODEL_CONFIGS.GENERATE_FAQ_SCHEMA.presence_penalty,
+      max_tokens: AI_MODEL_CONFIGS.GENERATE_FAQ_SCHEMA.max_tokens,
       messages: [
         {
           role: 'system',
@@ -82,7 +87,12 @@ export async function generateFAQSchema(input: z.infer<typeof GenerateFAQSchemaI
         },
         {
           role: 'user',
-          content: `Title Keywords: ${args.titleKeywords}\nArticle Type: ${articleType}\nPage Content (truncated): ${trimmedContent}\nPeople Also Ask: ${JSON.stringify(args.peopleAlsoAsk)}\n\nOutput the complete JSON-LD schema followed by '---' and the plain‑text FAQ.`
+          content: `Title Keywords: ${args.titleKeywords}
+Article Type: ${articleType}
+Page Content (truncated): ${trimmedContent}
+People Also Ask: ${JSON.stringify(args.peopleAlsoAsk)}
+
+Output the complete JSON-LD schema followed by '---' and the plain‑text FAQ.`
         }
       ]
     });
