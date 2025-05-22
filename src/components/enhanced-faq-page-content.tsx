@@ -246,12 +246,79 @@ async function onSubmit(values: FaqFormValues) {
           {/* 主要內容區域：左右兩欄佈局 */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 mb-12">
             
-            {/* 左欄：說明文字 - 更新 Firecrawl 說明 */}
+            {/* 左欄：說明文字 - 新增導言、開發者、Serper、OpenRouter，Firecrawl移至最後 */}
             <div className="space-y-6 lg:space-y-8">
-              
-              {/* Serper 說明 - 保持不變 */}
-              
-              {/* Firecrawl 說明 - 新增 */}
+
+              {/* 頁面標題與導言說明 */}
+              <Card className="shadow-lg border-primary/20">
+                <CardHeader>
+                  <CardTitle className="text-2xl font-bold">
+                    FAQ結構化資料產生器
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <p className="text-muted-foreground text-base leading-relaxed">
+                    FAQ 結構化資料的複雜問題，交給 AI。
+                    想搞定 AI 時代 SEO 的問題，交給好事。
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* 開發者資訊 */}
+              <Card className="shadow-lg border-primary/20">
+                <CardHeader>
+                  <CardTitle className="text-lg font-semibold">
+                    開發者
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-2 text-sm leading-relaxed">
+                  <p><strong>好事發生數位</strong></p>
+                  <p>AI SEO、n8n AI 自動化教學、整合行銷相關服務，就降。</p>
+                  <p>好事官網：<a href="https://ohya.co" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">https://ohya.co</a></p>
+                  <p>Threads: @ohya.studio</p>
+                  <p>聯絡我們：<a href="mailto:service@ohya.co" className="text-blue-600 underline">service@ohya.co</a></p>
+                </CardContent>
+              </Card>
+
+              {/* Serper 說明區塊 */}
+              <Card className="shadow-lg border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-blue-600">
+                    <KeyRound className="mr-3 h-6 w-6" />
+                    Serper
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm">
+                  <p>
+                    負責依照 AI 抓取出的關鍵字進行搜尋，找出該關鍵字搜尋結果的常見問題。
+                    請到 Serper 網站註冊一個免費帳號，即有 2500 次免費使用額度，
+                    <a href="https://serper.dev" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">點我前往</a>。
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* OpenRouter 說明區塊 */}
+              <Card className="shadow-lg border-primary/20">
+                <CardHeader>
+                  <CardTitle className="flex items-center text-purple-600">
+                    <Sparkles className="mr-3 h-6 w-6" />
+                    免費用 OpenRouter 處理 FAQ 結構化資料
+                  </CardTitle>
+                </CardHeader>
+                <CardContent className="space-y-4 text-sm">
+                  <p>
+                    請到 <strong>OpenRouter</strong> 官網註冊一個免費帳號，
+                    <a href="https://openrouter.ai" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">點我前往</a>，取得你的 API key 後直接填入右側欄位即可。
+                    本專案採用 Google: Gemma 3 27B (free) 語言模型處理，不會有費用產生，可安心使用。
+                    詳情請見：
+                    <a href="https://openrouter.ai/google/gemma-3-27b-it:free" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">
+                      https://openrouter.ai/google/gemma-3-27b-it:free
+                    </a>
+                  </p>
+                </CardContent>
+              </Card>
+
+              {/* Firecrawl 說明 - 移到最後一個區塊 */}
               <Card className="shadow-lg border-orange-200 dark:border-orange-800">
                 <CardHeader>
                   <CardTitle className="flex items-center text-orange-600 dark:text-orange-400">
@@ -281,11 +348,7 @@ async function onSubmit(values: FaqFormValues) {
                 </CardContent>
               </Card>
 
-              {/* OpenRouter 說明 - 保持不變 */}
-              
-              {/* 開發者資訊 - 保持不變 */}
-              
-              {/* 智慧功能亮點 - 更新 */}
+              {/* 智慧功能亮點 - 保持不變 */}
               <Card className="shadow-lg border-primary/20">
                 <CardHeader>
                   <CardTitle className="flex items-center text-primary">
