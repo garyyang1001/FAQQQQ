@@ -11,9 +11,11 @@
 import { OpenAI } from 'openai';
 import { z } from 'zod';
 
+const SYSTEM_PROMPT = `You are an expert in SEO and keyword extraction. Your task is to extract the most relevant keywords from the given title. Return ONLY a JSON array of 3 to 5 keywords. No explanations or additional text. Ensure the output is valid JSON.`;
+
 const ExtractTitleKeywordsInputSchema = z.object({
   title: z.string().describe('The title of the webpage.'),
-  openRouterApiKey: z.string().min(1).describe('The OpenRouter API Key.'),
+  openRouterApiKey: z.string().min(1).describe('The OpenRouter API Key provided by the user.'),
 });
 export type ExtractTitleKeywordsInput = z.infer<typeof ExtractTitleKeywordsInputSchema>;
 
@@ -26,34 +28,36 @@ export type ExtractTitleKeywordsOutput = z.infer<typeof ExtractTitleKeywordsOutp
 
 export async function extractTitleKeywords(input: z.infer<typeof ExtractTitleKeywordsInputSchema>): Promise<z.infer<typeof ExtractTitleKeywordsOutputSchema>> {
   try {
+    const apiKey = input.openRouterApiKey;
+
     const openai = new OpenAI({
-      apiKey: input.openRouterApiKey,
+      apiKey,
       baseURL: 'https://openrouter.ai/api/v1'
     });
 
-    const completion = await openai.chat.completions.create({
+  const completion = await openai.chat.completions.create({
       model: 'google/gemma-3-27b-it:free',
       messages: [
-        {
-          role: 'system',
-          content: `You are an expert in SEO and keyword extraction. Your task is to extract the most relevant keywords from the given title. Return ONLY a JSON array of 3 to 5 keywords. No explanations or additional text. Ensure the output is valid JSON.`
-        },
+        { role: 'system', content: SYSTEM_PROMPT },
         {
           role: 'user',
-          content: `Title: ${input.title}\n\nReturn ONLY a JSON array of 3 to 5 keywords. For example: ["keyword1", "keyword2", "keyword3"]`
+          content: `Title: ${input.title}\n\nReturn ONLY a JSON array of 3 to 5 keywords. For example: ["keyword1","keyword2","keyword3"]`
         }
       ]
     });
 
-    console.log("AI response content:", completion.choices[0].message.content);
-    const content = completion.choices[0].message.content || '[]';
-    const match = content.match(/\[.*\]/);
+    if (process.env.NODE_ENV !== 'production') {
+      console.log('[extractTitleKeywords] AI response:', completion.choices[0].message.content);
+    }
+
+    const raw = completion.choices[0].message.content || '[]';
+    const match = raw.match(/\[[\s\S]*\]/);
     const jsonString = match ? match[0] : '[]';
-    return {
-      keywords: JSON.parse(jsonString)
-    };
+    const parsed = z.array(z.string()).safeParse(JSON.parse(jsonString));
+
+    return { keywords: parsed.success ? parsed.data : [] };
   } catch (error: any) {
-    console.error("Error extracting keywords:", error);
+    console.error('[extractTitleKeywords] ', error.message);
     return { keywords: [] };
   }
 }

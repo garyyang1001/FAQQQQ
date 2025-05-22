@@ -137,27 +137,32 @@ export async function generateFaqAction(values: FaqFormValues): Promise<ActionRe
 
     let peopleAlsoAskData: SerperPeopleAlsoAskItem[] = [];
     try {
-      const serperQuery = extractedKeywords.keywords.join(' ');
       const serperUrl = `https://google.serper.dev/search`;
-      const serperResponse = await fetch(serperUrl, {
-        method: 'POST',
-        headers: {
-          'X-API-KEY': values.serperApiKey,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ q: serperQuery }),
-      });
 
-      if (!serperResponse.ok) {
-        const errorBody = await serperResponse.text();
-        console.error(`Serper API error: ${serperResponse.status} ${serperResponse.statusText}`, errorBody);
-        const errorMsg = `Serper API error: ${serperResponse.status} - ${errorBody}`;
-        logData.error = errorMsg;
-        await addLogEntry(logData as LogEntry);
-        return { error: errorMsg };
+      for (const keyword of extractedKeywords.keywords) {
+        const serperResponse = await fetch(serperUrl, {
+          method: 'POST',
+          headers: {
+            'X-API-KEY': values.serperApiKey,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ q: keyword }),
+        });
+
+        if (!serperResponse.ok) {
+          const errorBody = await serperResponse.text();
+          console.error(`Serper API error: ${serperResponse.status} ${serperResponse.statusText}`, errorBody);
+          const errorMsg = `Serper API error: ${serperResponse.status} - ${errorBody}`;
+          logData.error = errorMsg;
+          await addLogEntry(logData as LogEntry);
+          continue; // Continue to the next keyword
+        }
+
+        const serperResult = await serperResponse.json() as SerperResponse;
+        if (serperResult.peopleAlsoAsk) {
+          peopleAlsoAskData = peopleAlsoAskData.concat(serperResult.peopleAlsoAsk);
+        }
       }
-      const serperResult = await serperResponse.json() as SerperResponse;
-      peopleAlsoAskData = serperResult.peopleAlsoAsk || [];
       logData.peopleAlsoAsk = peopleAlsoAskData;
     } catch (e: any) {
       console.error("Error fetching People Also Ask data:", e);
@@ -172,7 +177,7 @@ export async function generateFaqAction(values: FaqFormValues): Promise<ActionRe
       generatedSchema = await generateFAQSchema({
   titleKeywords: extractedKeywords.keywords.join(', '),
   pageContent: bodyContent,
-  peopleAlsoAsk: peopleAlsoAskData.length > 0 ? JSON.stringify(peopleAlsoAskData.map(item => item.question)) : "No 'People Also Ask' data found.",
+  peopleAlsoAsk: peopleAlsoAskData,
   openRouterApiKey: values.openRouterApiKey,
       });
       logData.faqSchema = generatedSchema.faqSchema;
