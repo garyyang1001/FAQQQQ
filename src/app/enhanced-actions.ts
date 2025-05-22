@@ -1,5 +1,5 @@
-// 智慧版 src/app/enhanced-actions.ts
-// 真正的增強：智慧化 FAQ 問題生成
+// src/app/enhanced-actions.ts
+// 更新為使用 Firecrawl 的版本
 
 "use server";
 
@@ -8,11 +8,12 @@ import { generateFAQSchema } from '@/ai/flows/generate-faq-schema';
 import { formatFaqToText } from '@/ai/flows/format-faq-to-text';
 import { EnhancedContentAnalyzer } from '@/lib/enhanced-content-analyzer';
 import { AI_MODEL_CONFIGS } from '@/lib/ai-model-configs';
+import { fetchContentWithFirecrawl, fallbackFetchContent } from '@/lib/firecrawl-fetcher';  // 新增
 import type { FaqFormValues } from '@/lib/schemas';
 import type { EnhancedContentAnalysisResult } from '@/lib/enhanced-content-types';
 import { addLogEntry, type LogEntry } from '@/lib/logger';
 
-// 智慧問題分析結果
+// 智慧問題分析結果的類型
 interface SmartQuestionAnalysis {
   contentInsights: {
     mainTopics: string[];
@@ -77,13 +78,13 @@ interface EnhancedActionResponse {
     }>;
   };
   
-  // 新增：智慧問題分析結果
+  // 智慧問題分析結果
   smartQuestionAnalysis?: SmartQuestionAnalysis;
   
   error?: string;
 }
 
-// 智慧問題生成器類別
+// 智慧問題生成器類別（保持不變）
 class IntelligentQuestionGenerator {
   
   async generateSmartQuestions(
@@ -124,7 +125,7 @@ class IntelligentQuestionGenerator {
     };
   }
   
-  // 深度內容分析
+  // 其他方法保持不變...
   private async analyzeContentDepth(content: string, title: string, apiKey: string) {
     const prompt = `
 請深度分析以下網頁內容，提取關鍵資訊：
@@ -164,7 +165,6 @@ class IntelligentQuestionGenerator {
     }
   }
   
-  // 生成分層問題
   private async generateLayeredQuestions(
     contentInsights: any,
     keywords: string[],
@@ -232,7 +232,6 @@ class IntelligentQuestionGenerator {
     }
   }
   
-  // 與PAA結合並優化
   private async optimizeWithPAA(
     layeredQuestions: any,
     peopleAlsoAsk: SerperPeopleAlsoAskItem[],
@@ -338,38 +337,62 @@ ${JSON.stringify(peopleAlsoAsk.map(item => item.question), null, 2)}
   }
 }
 
-// 主要的增強版處理函數
+// 主要的增強版處理函數 - 使用 Firecrawl
 export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<EnhancedActionResponse> {
   const logData: Partial<LogEntry> = { url: values.url };
   
   try {
-    // 步驟1: 抓取網頁內容
-    console.log('🌐 正在抓取網頁內容...');
+    // 步驟1: 使用 Firecrawl 抓取網頁內容
+    console.log('🔥 正在使用 Firecrawl 抓取網頁內容...');
+    let contentResult;
     let htmlContent = '';
+    
     try {
-      const response = await fetch(values.url, { 
-        headers: { 'User-Agent': 'SchemaFAQBot/1.0' } 
-      });
-      if (!response.ok) {
-        const errorMsg = `無法抓取網頁: ${response.status} ${response.statusText}`;
+      // 優先使用 Firecrawl
+      contentResult = await fetchContentWithFirecrawl(values.url, values.firecrawlApiKey);
+      console.log('✅ Firecrawl 抓取成功');
+      
+      // 為了相容性，我們仍需要 HTML 內容用於內容分析器
+      // 這裡我們用 Firecrawl 的結果模擬 HTML
+      htmlContent = `
+        <html>
+          <head>
+            <title>${contentResult.title}</title>
+            ${contentResult.metadata?.description ? `<meta name="description" content="${contentResult.metadata.description}">` : ''}
+            ${contentResult.metadata?.keywords ? `<meta name="keywords" content="${contentResult.metadata.keywords}">` : ''}
+          </head>
+          <body>
+            <h1>${contentResult.title}</h1>
+            <main>${contentResult.bodyContent.split('\n').map(p => p.trim() ? `<p>${p}</p>` : '').join('')}</main>
+          </body>
+        </html>
+      `;
+      
+    } catch (firecrawlError: any) {
+      console.warn('⚠️ Firecrawl 抓取失敗，使用備用方法:', firecrawlError.message);
+      
+      try {
+        // 備用方案：使用傳統方法
+        contentResult = await fallbackFetchContent(values.url);
+        console.log('✅ 備用抓取方法成功');
+        
+        // 模擬 HTML
+        htmlContent = `
+          <html>
+            <head><title>${contentResult.title}</title></head>
+            <body><h1>${contentResult.title}</h1><main><p>${contentResult.bodyContent}</p></main></body>
+          </html>
+        `;
+        
+      } catch (fallbackError: any) {
+        const errorMsg = `內容抓取失敗: Firecrawl錯誤: ${firecrawlError.message}, 備用方法錯誤: ${fallbackError.message}`;
         logData.error = errorMsg;
         await addLogEntry(logData as LogEntry);
         return { error: errorMsg };
       }
-      htmlContent = await response.text();
-      console.log('✅ 網頁內容抓取成功');
-    } catch (e: any) {
-      console.error("抓取網頁時發生錯誤:", e);
-      logData.error = `抓取網頁錯誤: ${e.message}`;
-      await addLogEntry(logData as LogEntry);
-      return { error: `抓取網頁錯誤: ${e.message}` };
     }
 
-    // 步驟2: 基礎內容分析
-    console.log('🔍 正在進行基礎內容分析...');
-    let contentAnalysis: EnhancedContentAnalysisResult | undefined;
-    let enhancedKeywords: string[] = [];
-    const { title, bodyContent } = extractBasicContent(htmlContent);
+    const { title, bodyContent } = contentResult;
     
     if (!title || !bodyContent) {
       const errorMsg = "無法從網頁中提取內容";
@@ -378,6 +401,11 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
       return { error: errorMsg };
     }
 
+    // 步驟2: 基礎內容分析
+    console.log('🔍 正在進行基礎內容分析...');
+    let contentAnalysis: EnhancedContentAnalysisResult | undefined;
+    let enhancedKeywords: string[] = [];
+    
     try {
       const analyzer = new EnhancedContentAnalyzer(htmlContent, values.url);
       contentAnalysis = await analyzer.analyzeContent(values.openRouterApiKey);
@@ -446,11 +474,10 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
       console.log('✅ 找到', peopleAlsoAskData.length, '個 Google PAA 問題');
     } catch (e: any) {
       console.error("搜尋相關問題時發生錯誤:", e);
-      // 不要因為PAA失敗就停止，繼續處理
       console.log('⚠️ PAA 搜尋失敗，將只使用內容分析生成問題');
     }
 
-    // 🧠 步驟4: 智慧問題生成（核心增強功能！）
+    // 步驟4: 智慧問題生成
     console.log('🧠 正在進行智慧問題生成...');
     let smartQuestionAnalysis: SmartQuestionAnalysis | undefined;
     let finalQuestions: Array<{ question: string; answer?: string }> = [];
@@ -465,17 +492,14 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
         values.openRouterApiKey
       );
       
-      // 將優化的問題轉換為FAQ格式
       finalQuestions = smartQuestionAnalysis.optimizedFinalQuestions.map(item => ({
         question: item.searchOptimized || item.question,
-        // 這裡暫時不生成答案，讓原有的generateFAQSchema處理
       }));
       
       console.log('🎉 智慧問題生成完成，共', finalQuestions.length, '個優化問題');
       
     } catch (e: any) {
       console.error("智慧問題生成失敗，使用備用方案:", e);
-      // 備用方案：使用 PAA 問題
       finalQuestions = peopleAlsoAskData.map(item => ({
         question: item.question
       }));
@@ -485,7 +509,6 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
     console.log('📝 正在生成增強版 FAQ Schema...');
     let generatedSchema: { faqSchema: string };
     try {
-      // 準備增強的內容描述
       const enhancedContent = smartQuestionAnalysis ? 
         `網站主題：${smartQuestionAnalysis.contentInsights.mainTopics?.join('、')}
 用戶目標：${smartQuestionAnalysis.contentInsights.userGoals?.join('、')}
@@ -494,7 +517,6 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
 原始內容：${bodyContent.substring(0, 1000)}` :
         bodyContent;
 
-      // 使用智慧生成的問題
       const questionsForSchema = finalQuestions.length > 0 ? 
         finalQuestions.map(item => ({ question: item.question })) :
         peopleAlsoAskData;
@@ -536,28 +558,25 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
       }
     }
 
-    // 記錄增強結果
+    // 記錄結果
     await addLogEntry({
       ...logData,
       contentAnalysisScore: contentAnalysis?.seoElements?.seoScore?.overall,
       contentWordCount: contentAnalysis?.structure?.wordCount,
       seoImprovements: contentAnalysis?.seoElements?.seoScore?.improvements?.length,
-      // 新增智慧分析記錄
       smartQuestionsGenerated: finalQuestions.length,
-      questionSources: smartQuestionAnalysis?.optimizedFinalQuestions?.map(q => q.source).join(',')
+      questionSources: smartQuestionAnalysis?.optimizedFinalQuestions?.map(q => q.source).join(','),
+      // 新增 Firecrawl 使用記錄
+      contentFetchMethod: contentResult ? 'firecrawl' : 'fallback'
     } as LogEntry);
 
     console.log('🎉 所有增強處理完成！');
 
-    // 回傳完整增強結果
     return {
-      // 原有欄位
       keywords: enhancedKeywords,
       peopleAlsoAsk: peopleAlsoAskData,
       faqSchema: generatedSchema.faqSchema,
       plainTextFaq: plainTextFaqResult.plainTextFaq,
-      
-      // 增強分析結果
       contentAnalysis,
       enhancedKeywords: contentAnalysis ? {
         semantic: contentAnalysis.keywords.semanticKeywords,
@@ -568,8 +587,6 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
         improvements: contentAnalysis.seoElements.seoScore.improvements,
         recommendations: contentAnalysis.recommendations
       } : undefined,
-      
-      // 🚀 新增：智慧問題分析結果
       smartQuestionAnalysis
     };
 
@@ -580,49 +597,4 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
     await addLogEntry(logData as LogEntry);
     return { error: errorMsg };
   }
-}
-
-// 基本內容提取函數（備用）
-function extractBasicContent(html: string): { title: string, bodyContent: string } {
-  let title = "";
-  const titleMatch = html.match(/<title[^>]*>([^<]+)<\/title>/i);
-  if (titleMatch && titleMatch[1]) {
-    title = titleMatch[1].trim();
-  }
-
-  let bodyContent = html;
-  bodyContent = bodyContent.replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '');
-  bodyContent = bodyContent.replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '');
-  bodyContent = bodyContent.replace(/<head\b[^<]*(?:(?!<\/head>)<[^<]*)*<\/head>/gi, '');
-  
-  const mainMatch = html.match(/<main[^>]*>([\s\S]*?)<\/main>/i);
-  const articleMatch = html.match(/<article[^>]*>([\s\S]*?)<\/article>/i);
-  
-  if (mainMatch && mainMatch[1]) {
-    bodyContent = mainMatch[1];
-  } else if (articleMatch && articleMatch[1]) {
-    bodyContent = articleMatch[1];
-  } else {
-    const bodyTagMatch = html.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-    if (bodyTagMatch && bodyTagMatch[1]) {
-      bodyContent = bodyTagMatch[1];
-    }
-  }
-  
-  bodyContent = bodyContent.replace(/<[^>]+>/g, ' ');
-  bodyContent = bodyContent.replace(/\s\s+/g, ' ').trim();
-
-  const MAX_CONTENT_LENGTH = 15000;
-  if (bodyContent.length > MAX_CONTENT_LENGTH) {
-    bodyContent = bodyContent.substring(0, MAX_CONTENT_LENGTH) + "... (truncated)";
-  }
-
-  if (!title && bodyContent) {
-    const h1Match = html.match(/<h1[^>]*>([^<]+)<\/h1>/i);
-    if (h1Match && h1Match[1]) {
-      title = h1Match[1].trim();
-    }
-  }
-
-  return { title, bodyContent };
 }
