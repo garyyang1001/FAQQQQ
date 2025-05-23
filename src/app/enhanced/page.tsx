@@ -1,12 +1,12 @@
-// 步驟2: 創建 src/app/enhanced/page.tsx
-// 這是增強版的頁面，用戶在瀏覽器中看到的界面
+// 修復進度顯示問題：使用帶進度功能的組件
+// src/app/enhanced/page.tsx
 
-import { EnhancedFaqPageContent } from '@/components/enhanced-faq-page-content';
+import EnhancedFaqPageWithProgress from '@/components/EnhancedFaqPageWithProgress';
 
 export default function EnhancedPage() {
   return (
     <main className="min-h-screen">
-      <EnhancedFaqPageContent />
+      <EnhancedFaqPageWithProgress />
     </main>
   );
 }
