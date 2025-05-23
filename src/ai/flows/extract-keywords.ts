@@ -1,7 +1,7 @@
 'use server';
 
 /**
- * @fileOverview Extracts keywords from a given title using the OpenRouter API.
+ * @fileOverview A flow to extract keywords from a title for FAQ generation.
  *
  * - extractTitleKeywords - A function that extracts keywords from a title.
  * - ExtractTitleKeywordsInput - The input type for the extractTitleKeywords function.
@@ -10,61 +10,80 @@
 
 import { OpenAI } from 'openai';
 import { z } from 'zod';
-import { AI_MODEL_CONFIGS } from '@/lib/ai-model-configs';
-
-const SYSTEM_PROMPT = `You are an expert in SEO and keyword extraction. Your task is to extract the most relevant keywords from the given title. Return ONLY a JSON array of 3 to 5 keywords. No explanations or additional text. Ensure the output is valid JSON.`;
 
 const ExtractTitleKeywordsInputSchema = z.object({
-  title: z.string().describe('The title of the webpage.'),
+  title: z.string().describe('The title from which to extract keywords.'),
   openRouterApiKey: z.string().min(1).describe('The OpenRouter API Key provided by the user.'),
 });
+
 export type ExtractTitleKeywordsInput = z.infer<typeof ExtractTitleKeywordsInputSchema>;
 
 const ExtractTitleKeywordsOutputSchema = z.object({
-  keywords: z
-    .array(z.string())
-    .describe('An array of keywords extracted from the title.'),
+  keywords: z.array(z.string()).describe('The keywords extracted from the title.'),
 });
+
 export type ExtractTitleKeywordsOutput = z.infer<typeof ExtractTitleKeywordsOutputSchema>;
 
 export async function extractTitleKeywords(input: z.infer<typeof ExtractTitleKeywordsInputSchema>): Promise<z.infer<typeof ExtractTitleKeywordsOutputSchema>> {
   try {
-    const apiKey = input.openRouterApiKey;
+    const args = input as ExtractTitleKeywordsInput;
+
+    const apiKey = args.openRouterApiKey;
 
     const openai = new OpenAI({
       apiKey,
       baseURL: 'https://openrouter.ai/api/v1'
     });
 
+    // 🔧 修復：將 system instructions 合併到 user message 中
+    const promptWithInstructions = `你是一位 SEO 專家，專門從文章標題中提取關鍵字。
+
+任務：從提供的標題中提取 3-5 個最重要的關鍵字，這些關鍵字將用於搜尋相關的 FAQ 問題。
+
+要求：
+1. 提取的關鍵字應該是搜尋量較高的詞彙
+2. 優先選擇核心主題詞彙，而非修飾詞
+3. 每個關鍵字長度建議 2-4 個字
+4. 避免過於通用的詞彙（如：方法、技巧等）
+5. 以 JSON 格式輸出，格式：{"keywords": ["關鍵字1", "關鍵字2", ...]}
+
+請只輸出 JSON 格式，不要包含其他說明文字。
+
+---
+
+標題：${args.title}
+
+請分析以上標題並提取關鍵字：`;
+
     const completion = await openai.chat.completions.create({
-      model: AI_MODEL_CONFIGS.EXTRACT_KEYWORDS.model,
-      temperature: AI_MODEL_CONFIGS.EXTRACT_KEYWORDS.temperature,
-      top_p: AI_MODEL_CONFIGS.EXTRACT_KEYWORDS.top_p,
-      frequency_penalty: AI_MODEL_CONFIGS.EXTRACT_KEYWORDS.frequency_penalty,
-      max_tokens: AI_MODEL_CONFIGS.EXTRACT_KEYWORDS.max_tokens,
+      model: 'google/gemma-3-27b-it:free',
+      temperature: 0.3,
       messages: [
-        { role: 'system', content: SYSTEM_PROMPT },
         {
           role: 'user',
-          content: `Title: ${input.title}
-
-Return ONLY a JSON array of 3 to 5 keywords. For example: ["keyword1","keyword2","keyword3"]`
+          content: promptWithInstructions
         }
       ]
     });
 
-    if (process.env.NODE_ENV !== 'production') {
-      console.log('[extractTitleKeywords] AI response:', completion.choices[0].message.content);
+    const response = completion.choices[0].message.content || '';
+    
+    try {
+      const parsed = JSON.parse(response);
+      return {
+        keywords: Array.isArray(parsed.keywords) ? parsed.keywords : []
+      };
+    } catch (parseError) {
+      console.error('Failed to parse keywords response:', parseError);
+      // 如果解析失敗，嘗試從回應中提取關鍵字
+      const fallbackKeywords = args.title.split(/\s+/).filter(word => word.length > 1).slice(0, 5);
+      return { keywords: fallbackKeywords };
     }
 
-    const raw = completion.choices[0].message.content || '[]';
-    const match = raw.match(/\[[\s\S]*\]/);
-    const jsonString = match ? match[0] : '[]';
-    const parsed = z.array(z.string()).safeParse(JSON.parse(jsonString));
-
-    return { keywords: parsed.success ? parsed.data : [] };
   } catch (error: any) {
-    console.error('[extractTitleKeywords] ', error.message);
-    return { keywords: [] };
+    console.error("Error extracting keywords:", error);
+    // 返回基於標題的備用關鍵字
+    const fallbackKeywords = input.title.split(/\s+/).filter(word => word.length > 1).slice(0, 5);
+    return { keywords: fallbackKeywords };
   }
 }

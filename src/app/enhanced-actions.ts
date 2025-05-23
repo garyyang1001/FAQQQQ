@@ -1,5 +1,5 @@
 // src/app/enhanced-actions.ts
-// 更新為使用 Firecrawl 的版本
+// 更新為使用 Firecrawl 的版本，支援進度發送
 
 "use server";
 
@@ -8,10 +8,13 @@ import { generateFAQSchema } from '@/ai/flows/generate-faq-schema';
 import { formatFaqToText } from '@/ai/flows/format-faq-to-text';
 import { EnhancedContentAnalyzer } from '@/lib/enhanced-content-analyzer';
 import { AI_MODEL_CONFIGS } from '@/lib/ai-model-configs';
-import { fetchContentWithFirecrawl, fallbackFetchContent } from '@/lib/firecrawl-fetcher';  // 新增
+import { fetchContentWithFirecrawl, fallbackFetchContent } from '@/lib/firecrawl-fetcher';
 import type { FaqFormValues } from '@/lib/schemas';
 import type { EnhancedContentAnalysisResult } from '@/lib/enhanced-content-types';
 import { addLogEntry, type LogEntry } from '@/lib/logger';
+
+// 進度發送功能的 import
+import { sendProgressUpdate, completeProgressSession } from '@/app/api/progress/route';
 
 // 智慧問題分析結果的類型
 interface SmartQuestionAnalysis {
@@ -84,7 +87,7 @@ interface EnhancedActionResponse {
   error?: string;
 }
 
-// 智慧問題生成器類別（保持不變）
+// 智慧問題生成器類別
 class IntelligentQuestionGenerator {
   
   async generateSmartQuestions(
@@ -125,7 +128,6 @@ class IntelligentQuestionGenerator {
     };
   }
   
-  // 其他方法保持不變...
   private async analyzeContentDepth(content: string, title: string, apiKey: string) {
     const prompt = `
 請深度分析以下網頁內容，提取關鍵資訊：
@@ -338,22 +340,34 @@ ${JSON.stringify(peopleAlsoAsk.map(item => item.question), null, 2)}
 }
 
 // 主要的增強版處理函數 - 使用 Firecrawl
-export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<EnhancedActionResponse> {
+export async function generateEnhancedFaqAction(
+  values: FaqFormValues, 
+  sessionId?: string  // 添加可選的 sessionId 參數（用於進度追蹤）
+): Promise<EnhancedActionResponse> {
   const logData: Partial<LogEntry> = { url: values.url };
+  
+  // 進度發送輔助函數
+  const sendProgress = (step: string, status: 'start' | 'complete' | 'error', message: string, details?: string, icon?: string) => {
+    if (sessionId) {
+      sendProgressUpdate(sessionId, { step, status, message, details, icon });
+    }
+    console.log(message); // 保留原有的 console.log
+  };
   
   try {
     // 步驟1: 使用 Firecrawl 抓取網頁內容
-    console.log('🔥 正在使用 Firecrawl 抓取網頁內容...');
+    sendProgress('fetch-start', 'start', '🔥 正在使用 Firecrawl 抓取網頁內容...', `目標URL: ${values.url}`, '🔥');
+    
     let contentResult;
     let htmlContent = '';
     
     try {
       // 優先使用 Firecrawl
       contentResult = await fetchContentWithFirecrawl(values.url, values.firecrawlApiKey);
-      console.log('✅ Firecrawl 抓取成功');
+      sendProgress('fetch-success', 'complete', '✅ Firecrawl 抓取成功', 
+        `標題: ${contentResult.title}\n內容長度: ${contentResult.bodyContent.length} 字元`, '✅');
       
       // 為了相容性，我們仍需要 HTML 內容用於內容分析器
-      // 這裡我們用 Firecrawl 的結果模擬 HTML
       htmlContent = `
         <html>
           <head>
@@ -369,12 +383,13 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
       `;
       
     } catch (firecrawlError: any) {
-      console.warn('⚠️ Firecrawl 抓取失敗，使用備用方法:', firecrawlError.message);
+      sendProgress('fetch-start', 'start', '⚠️ Firecrawl 抓取失敗，使用備用方法', firecrawlError.message, '⚠️');
       
       try {
         // 備用方案：使用傳統方法
         contentResult = await fallbackFetchContent(values.url);
-        console.log('✅ 備用抓取方法成功');
+        sendProgress('fetch-success', 'complete', '✅ 備用抓取方法成功', 
+          `標題: ${contentResult.title}`, '✅');
         
         // 模擬 HTML
         htmlContent = `
@@ -386,8 +401,10 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
         
       } catch (fallbackError: any) {
         const errorMsg = `內容抓取失敗: Firecrawl錯誤: ${firecrawlError.message}, 備用方法錯誤: ${fallbackError.message}`;
+        sendProgress('fetch-start', 'error', '❌ 內容抓取失敗', errorMsg, '❌');
         logData.error = errorMsg;
         await addLogEntry(logData as LogEntry);
+        if (sessionId) completeProgressSession(sessionId);
         return { error: errorMsg };
       }
     }
@@ -396,13 +413,16 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
     
     if (!title || !bodyContent) {
       const errorMsg = "無法從網頁中提取內容";
+      sendProgress('fetch-start', 'error', '❌ 內容提取失敗', errorMsg, '❌');
       logData.error = errorMsg;
       await addLogEntry(logData as LogEntry);
+      if (sessionId) completeProgressSession(sessionId);
       return { error: errorMsg };
     }
 
     // 步驟2: 基礎內容分析
-    console.log('🔍 正在進行基礎內容分析...');
+    sendProgress('analyze-start', 'start', '🔍 正在進行基礎內容分析...', '分析網頁結構和提取關鍵字', '🔍');
+    
     let contentAnalysis: EnhancedContentAnalysisResult | undefined;
     let enhancedKeywords: string[] = [];
     
@@ -417,10 +437,11 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
       ].filter((keyword, index, self) => self.indexOf(keyword) === index);
       
       logData.keywords = enhancedKeywords;
-      console.log('✅ 基礎內容分析完成，找到', enhancedKeywords.length, '個關鍵字');
+      sendProgress('analyze-complete', 'complete', '✅ 基礎內容分析完成', 
+        `找到 ${enhancedKeywords.length} 個關鍵字: ${enhancedKeywords.slice(0, 5).join(', ')}${enhancedKeywords.length > 5 ? '...' : ''}`, '✅');
       
     } catch (e: any) {
-      console.error("增強內容分析失敗，使用基本分析:", e);
+      sendProgress('analyze-start', 'start', '⚠️ 增強內容分析失敗，使用基本分析', e.message, '⚠️');
       
       try {
         const extractedKeywords = await extractTitleKeywords({ 
@@ -429,23 +450,29 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
         });
         enhancedKeywords = extractedKeywords.keywords;
         logData.keywords = enhancedKeywords;
-        console.log('✅ 基本關鍵字提取完成');
+        sendProgress('analyze-complete', 'complete', '✅ 基本關鍵字提取完成', 
+          `關鍵字: ${enhancedKeywords.join(', ')}`, '✅');
       } catch (keywordError: any) {
         enhancedKeywords = title.split(/\s+/).filter(k => k.length > 3);
         logData.keywords = enhancedKeywords;
-        console.log('⚠️ 使用標題分詞作為關鍵字');
+        sendProgress('analyze-complete', 'complete', '⚠️ 使用標題分詞作為關鍵字', 
+          `關鍵字: ${enhancedKeywords.join(', ')}`, '⚠️');
       }
     }
 
     if (enhancedKeywords.length === 0) {
       const errorMsg = "無法提取任何關鍵字";
+      sendProgress('analyze-start', 'error', '❌ 關鍵字提取失敗', errorMsg, '❌');
       logData.error = errorMsg;
       await addLogEntry(logData as LogEntry);
+      if (sessionId) completeProgressSession(sessionId);
       return { error: errorMsg };
     }
 
     // 步驟3: 搜尋 People Also Ask 資料
-    console.log('🔎 正在搜尋相關問題...');
+    sendProgress('search-start', 'start', '🔎 正在搜尋相關問題...', 
+      `搜尋關鍵字: ${enhancedKeywords.slice(0, 5).join(' ')}`, '🔎');
+    
     let peopleAlsoAskData: SerperPeopleAlsoAskItem[] = [];
     
     try {
@@ -462,23 +489,23 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
       if (!serperResponse.ok) {
         const errorBody = await serperResponse.text();
         console.error(`Serper API 錯誤: ${serperResponse.status}`, errorBody);
-        const errorMsg = `Serper API 錯誤: ${serperResponse.status}`;
-        logData.error = errorMsg;
-        await addLogEntry(logData as LogEntry);
-        return { error: errorMsg };
+        sendProgress('search-complete', 'complete', '⚠️ PAA 搜尋失敗，將使用內容分析', 
+          `API 錯誤: ${serperResponse.status}`, '⚠️');
+      } else {
+        const serperResult = await serperResponse.json() as SerperResponse;
+        peopleAlsoAskData = serperResult.peopleAlsoAsk || [];
+        logData.peopleAlsoAsk = peopleAlsoAskData;
+        sendProgress('search-complete', 'complete', `✅ 找到 ${peopleAlsoAskData.length} 個 Google PAA 問題`, 
+          peopleAlsoAskData.length > 0 ? `範例: ${peopleAlsoAskData[0].question}` : '未找到 PAA 數據', '✅');
       }
-      
-      const serperResult = await serperResponse.json() as SerperResponse;
-      peopleAlsoAskData = serperResult.peopleAlsoAsk || [];
-      logData.peopleAlsoAsk = peopleAlsoAskData;
-      console.log('✅ 找到', peopleAlsoAskData.length, '個 Google PAA 問題');
     } catch (e: any) {
       console.error("搜尋相關問題時發生錯誤:", e);
-      console.log('⚠️ PAA 搜尋失敗，將只使用內容分析生成問題');
+      sendProgress('search-complete', 'complete', '⚠️ PAA 搜尋失敗，將只使用內容分析生成問題', e.message, '⚠️');
     }
 
     // 步驟4: 智慧問題生成
-    console.log('🧠 正在進行智慧問題生成...');
+    sendProgress('generate-start', 'start', '🧠 正在進行智慧問題生成...', '使用 AI 分析內容並生成問題', '🧠');
+    
     let smartQuestionAnalysis: SmartQuestionAnalysis | undefined;
     let finalQuestions: Array<{ question: string; answer?: string }> = [];
     
@@ -496,17 +523,22 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
         question: item.searchOptimized || item.question,
       }));
       
-      console.log('🎉 智慧問題生成完成，共', finalQuestions.length, '個優化問題');
+      sendProgress('generate-complete', 'complete', `🎉 智慧問題生成完成，共 ${finalQuestions.length} 個優化問題`, 
+        `問題範例: ${finalQuestions[0]?.question || '無問題生成'}`, '🎉');
       
     } catch (e: any) {
       console.error("智慧問題生成失敗，使用備用方案:", e);
       finalQuestions = peopleAlsoAskData.map(item => ({
         question: item.question
       }));
+      sendProgress('generate-complete', 'complete', '⚠️ 智慧問題生成失敗，使用備用方案', 
+        `使用 PAA 問題: ${finalQuestions.length} 個`, '⚠️');
     }
 
     // 步驟5: 生成增強版 FAQ Schema
-    console.log('📝 正在生成增強版 FAQ Schema...');
+    sendProgress('schema-start', 'start', '📝 正在生成增強版 FAQ Schema...', 
+      '創建結構化資料標記', '📝');
+    
     let generatedSchema: { faqSchema: string };
     try {
       const enhancedContent = smartQuestionAnalysis ? 
@@ -528,17 +560,22 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
         openRouterApiKey: values.openRouterApiKey,
       });
       logData.faqSchema = generatedSchema.faqSchema;
-      console.log('✅ 增強版 FAQ Schema 生成完成');
+      sendProgress('schema-complete', 'complete', '✅ 增強版 FAQ Schema 生成完成', 
+        `JSON-LD 結構化資料已生成`, '✅');
     } catch (e: any) {
       console.error("生成 FAQ Schema 時發生錯誤:", e);
       const errorMsg = `FAQ 生成錯誤: ${e.message}`;
+      sendProgress('schema-start', 'error', '❌ FAQ Schema 生成失敗', errorMsg, '❌');
       logData.error = errorMsg;
       await addLogEntry(logData as LogEntry);
+      if (sessionId) completeProgressSession(sessionId);
       return { error: errorMsg };
     }
 
     // 步驟6: 格式化為純文字
-    console.log('📋 正在格式化為純文字...');
+    sendProgress('format-start', 'start', '📋 正在格式化為純文字...', 
+      '生成易讀的文字版本', '📋');
+    
     let plainTextFaqResult: { plainTextFaq: string } = { 
       plainTextFaq: "無法生成純文字版本" 
     };
@@ -550,9 +587,11 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
           openRouterApiKey: values.openRouterApiKey,
         });
         logData.plainTextFaq = plainTextFaqResult.plainTextFaq;
-        console.log('✅ 純文字格式化完成');
+        sendProgress('format-complete', 'complete', '✅ 純文字格式化完成', 
+          '可讀性文字版本已生成', '✅');
       } catch (e: any) {
         console.error("格式化純文字時發生錯誤:", e);
+        sendProgress('format-start', 'error', '⚠️ 純文字格式化失敗', e.message, '⚠️');
         logData.error = (logData.error ? logData.error + "; " : "") + 
           `格式化錯誤: ${e.message}`;
       }
@@ -566,9 +605,17 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
       seoImprovements: contentAnalysis?.seoElements?.seoScore?.improvements?.length,
       smartQuestionsGenerated: finalQuestions.length,
       questionSources: smartQuestionAnalysis?.optimizedFinalQuestions?.map(q => q.source).join(','),
-      // 新增 Firecrawl 使用記錄
       contentFetchMethod: contentResult ? 'firecrawl' : 'fallback'
     } as LogEntry);
+
+    // 完成處理
+    sendProgress('complete', 'complete', '🎉 所有增強處理完成！', 
+      '已成功生成 FAQ Schema 和純文字版本', '🎉');
+
+    // 延遲一下再關閉連接，讓用戶看到完成消息
+    setTimeout(() => {
+      if (sessionId) completeProgressSession(sessionId);
+    }, 1500);
 
     console.log('🎉 所有增強處理完成！');
 
@@ -593,8 +640,10 @@ export async function generateEnhancedFaqAction(values: FaqFormValues): Promise<
   } catch (error: any) {
     console.error("處理過程中發生未預期的錯誤:", error);
     const errorMsg = error.message || "發生未知錯誤";
+    sendProgress('error', 'error', '❌ 處理失敗', errorMsg, '❌');
     logData.error = errorMsg;
     await addLogEntry(logData as LogEntry);
+    if (sessionId) completeProgressSession(sessionId);
     return { error: errorMsg };
   }
 }

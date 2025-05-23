@@ -268,11 +268,10 @@ async function onSubmit(values: FaqFormValues) {
               <Card className="shadow-lg border-primary/20">
                 <CardHeader>
                   <CardTitle className="text-lg font-semibold">
-                    開發者
+                    <p><strong>好事發生數位</strong></p>
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-2 text-sm leading-relaxed">
-                  <p><strong>好事發生數位</strong></p>
                   <p>AI SEO、n8n AI 自動化教學、整合行銷相關服務，就降。</p>
                   <p>好事官網：<a href="https://ohya.co" target="_blank" rel="noopener noreferrer" className="text-blue-600 underline">https://ohya.co</a></p>
                   <p>Threads: @ohya.studio</p>

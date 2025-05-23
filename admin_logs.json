@@ -1,5 +1,78 @@
 [
   {
+    "timestamp": "2025-05-23T12:42:10.302Z",
+    "url": "https://www.ematch.com.tw/zh-TW/category/love/2020-10-22-15-14-50",
+    "keywords": [
+      "三觀",
+      "戀愛",
+      "婚姻",
+      "分手",
+      "價值觀",
+      "人生觀",
+      "世界觀",
+      "道德觀",
+      "愛情觀",
+      "人生態度"
+    ],
+    "peopleAlsoAsk": [],
+    "faqSchema": "",
+    "contentAnalysisScore": 38,
+    "contentWordCount": 75,
+    "seoImprovements": 0,
+    "smartQuestionsGenerated": 10,
+    "questionSources": "hybrid,hybrid,content-analysis,content-analysis,content-analysis,content-analysis,content-analysis,content-analysis,content-analysis,content-analysis",
+    "contentFetchMethod": "firecrawl"
+  },
+  {
+    "timestamp": "2025-05-23T11:43:39.256Z",
+    "url": "https://lovetogether.com.tw/love-values-match/",
+    "keywords": [
+      "三觀",
+      "愛情",
+      "相處",
+      "擇偶",
+      "關係",
+      "個性互補",
+      "價值觀",
+      "人生觀",
+      "愛情觀",
+      "伴侶選擇"
+    ],
+    "peopleAlsoAsk": [],
+    "faqSchema": "\n```json\n{\n  \"@context\": \"https://schema.org\",\n  \"@type\": \"FAQPage\",\n  \"mainEntity\": [\n    {\n      \"@type\": \"Question\",\n      \"name\": \"三觀是什麼？愛情裡三觀一致有多重要？\",\n      \"acceptedAnswer\": {\n        \"@type\": \"Answer\",\n        \"text\": \"三觀包含世界觀、人生觀、價值觀，是判斷彼此是否契合的核心。愛情中三觀一致能減少摩擦，建立更深層的連結，因為你們對世界的認知、對生活的目標和對重要事物的看法相似。若三觀相差過大，長期相處容易產生衝突和失望，甚至導致感情破裂，所以非常重要。\"\n      }\n    },\n    {\n      \"@type\": \"Question\",\n      \"name\": \"愛情觀和人生觀有什麼不同？人生觀不一致會影響感情嗎？\",\n      \"acceptedAnswer\": {\n        \"@type\": \"Answer\",\n        \"text\": \"愛情觀是關於愛的定義和期待，而人生觀則更廣泛，是關於你如何看待生命和規劃未來。人生觀不一致確實會影響感情，例如一方追求穩定，另一方嚮往自由，長期下來容易產生矛盾。溝通與理解很重要，但若差異過大，可能難以維持長久關係。\"\n      }\n    },\n    {\n      \"@type\": \"Question\",\n      \"name\": \"價值觀不合該怎麼辦？感情還能繼續嗎？\",\n      \"acceptedAnswer\": {\n        \"@type\": \"Answer\",\n        \"text\": \"價值觀不合時，先試著理解對方想法的根源，並坦誠溝通彼此的差異。如果只是小部分價值觀不同，可以尋求妥協或尊重彼此的選擇。但若核心價值觀（如對金錢、家庭的看法）截然不同，感情可能難以長久，需要慎重考慮是否繼續。\"\n      }\n    },\n    {\n      \"@type\": \"Question\",\n      \"name\": \"性格差異對感情有什麼影響？個性互補真的存在嗎？\",\n      \"acceptedAnswer\": {\n        \"@type\": \"Answer\",\n        \"text\": \"性格差異可能帶來新鮮感，但也可能引發摩擦。個性互補的確存在，但並非絕對。重要的是雙方都能接受並欣賞彼此的不同之處，而不是試圖改變對方。健康的關係是建立在尊重和理解的基礎上，而非單純的互補。\"\n      }\n    },\n    {\n      \"@type\": \"Question\",\n      \"name\": \"如何了解一個人的真實性格？交往初期如何觀察價值觀？\",\n      \"acceptedAnswer\": {\n        \"@type\": \"Answer\",\n        \"text\": \"透過日常相處、觀察其行為舉止和對事情的反應來了解真實性格。交往初期可以聊聊對重要議題的看法（如家庭、金錢、事業），觀察其價值觀是否與你相符。也可以觀察對方如何待人接物、處理衝突等。\"\n      }\n    },\n    {\n      \"@type\": \"Question\",\n      \"name\": \"擇偶除了三觀還要注意什麼？選擇伴侶的注意事項。\",\n      \"acceptedAnswer\": {\n        \"@type\": \"Answer\",\n        \"text\": \"除了三觀外，還要注意彼此是否有共同興趣、生活習慣是否相容、是否有共同的未來規劃等。選擇伴侶時要理性思考，不要被一時的激情沖昏頭腦。更重要的是要選擇一個能讓你感到舒服、自在、支持你的人。\"\n      }\n    }\n  ]\n}\n\n---\n\nQ: 三觀是什麼？愛情裡三觀一致有多重要？\nA: 三觀包含世界觀、人生觀、價值觀，是判斷彼此是否契合的核心。愛情中三觀一致能減少摩擦，建立更深層的連結，因為你們對世界的認知、對生活的目標和對重要事物的看法相似。若三觀相差過大，長期相處容易產生衝突和失望，甚至導致感情破裂，所以非常重要。\n\nQ: 愛情觀和人生觀有什麼不同？人生觀不一致會影響感情嗎？\nA: 愛情觀是關於愛的定義和期待，而人生觀則更廣泛，是關於你如何看待生命和規劃未來。人生觀不一致確實會影響感情，例如一方追求穩定，另一方嚮往自由，長期下來容易產生矛盾。溝通與理解很重要，但若差異過大，可能難以維持長久關係。\n\nQ: 價值觀不合該怎麼辦？感情還能繼續嗎？\nA: 價值觀不合時，先試著理解對方想法的根源，並坦誠溝通彼此的差異。如果只是小部分價值觀不同，可以尋求妥協或尊重彼此的選擇。但若核心價值觀（如對金錢、家庭的看法）截然不同，感情可能難以長久，需要慎重考慮是否繼續。\n\nQ: 性格差異對感情有什麼影響？個性互補真的存在嗎？\nA: 性格差異可能帶來新鮮感，但也可能引發摩擦。個性互補的確存在，但並非絕對。重要的是雙方都能接受並欣賞彼此的不同之處，而不是試圖改變對方。健康的關係是建立在尊重和理解的基礎上，而非單純的互補。\n\nQ: 如何了解一個人的真實性格？交往初期如何觀察價值觀？\nA: 透過日常相處、觀察其行為舉止和對事情的反應來了解真實性格。交往初期可以聊聊對重要議題的看法（如家庭、金錢、事業），觀察其價值觀是否與你相符。也可以觀察對方如何待人接物、處理衝突等。\n\nQ: 擇偶除了三觀還要注意什麼？選擇伴侶的注意事項。\nA: 除了三觀外，還要注意彼此是否有共同興趣、生活習慣是否相容、是否有共同的未來規劃等。選擇伴侶時要理性思考，不要被一時的激情沖昏頭腦。更重要的是要選擇一個能讓你感到舒服、自在、支持你的人。",
+    "plainTextFaq": "\nQ: 三觀是什麼？愛情裡三觀一致有多重要？\nA: 三觀包含世界觀、人生觀、價值觀，是判斷彼此是否契合的核心。愛情中三觀一致能減少摩擦，建立更深層的連結，因為你們對世界的認知、對生活的目標和對重要事物的看法相似。若三觀相差過大，長期相處容易產生衝突和失望，甚至導致感情破裂，所以非常重要。\n\nQ: 愛情觀和人生觀有什麼不同？人生觀不一致會影響感情嗎？\nA: 愛情觀是關於愛的定義和期待，而人生觀則更廣泛，是關於你如何看待生命和規劃未來。人生觀不一致確實會影響感情，例如一方追求穩定，另一方嚮往自由，長期下來容易產生矛盾。溝通與理解很重要，但若差異過大，可能難以維持長久關係。\n\nQ: 價值觀不合該怎麼辦？感情還能繼續嗎？\nA: 價值觀不合時，先試著理解對方想法的根源，並坦誠溝通彼此的差異。如果只是小部分價值觀不同，可以尋求妥協或尊重彼此的選擇。但若核心價值觀（如對金錢、家庭的看法）截然不同，感情可能難以長久，需要慎重考慮是否繼續。\n\nQ: 性格差異對感情有什麼影響？個性互補真的存在嗎？\nA: 性格差異可能帶來新鮮感，但也可能引發摩擦。個性互補的確存在，但並非絕對。重要的是雙方都能接受並欣賞彼此的不同之處，而不是試圖改變對方。健康的關係是建立在尊重和理解的基礎上，而非單純的互補。\n\nQ: 如何了解一個人的真實性格？交往初期如何觀察價值觀？\nA: 透過日常相處、觀察其行為舉止和對事情的反應來了解真實性格。交往初期可以聊聊對重要議題的看法（如家庭、金錢、事業），觀察其價值觀是否與你相符。也可以觀察對方如何待人接物、處理衝突等。\n\nQ: 擇偶除了三觀還要注意什麼？選擇伴侶的注意事項。\nA: 除了三觀外，還要注意彼此是否有共同興趣、生活習慣是否相容、是否有共同的未來規劃等。選擇伴侶時要理性思考，不要被一時的激情沖昏頭腦。更重要的是要選擇一個能讓你感到舒服、自在、支持你的人。\n",
+    "contentAnalysisScore": 43,
+    "contentWordCount": 155,
+    "seoImprovements": 0,
+    "smartQuestionsGenerated": 11,
+    "questionSources": "content-analysis,content-analysis,content-analysis,content-analysis,content-analysis,content-analysis,content-analysis,content-analysis,content-analysis,content-analysis,content-analysis",
+    "contentFetchMethod": "firecrawl"
+  },
+  {
+    "timestamp": "2025-05-23T06:43:21.729Z",
+    "url": "https://wannavegtour.com/bhutan/bhutanese-vegetarian-food/",
+    "keywords": [
+      "不丹素食",
+      "不丹旅遊",
+      "素食旅行",
+      "阿玩旅遊",
+      "不丹美食",
+      "素食餐廳",
+      "雷龍之國",
+      "藏傳佛教",
+      "不殺生"
+    ],
+    "peopleAlsoAsk": [],
+    "faqSchema": "Error generating FAQ schema: Cannot read properties of undefined (reading '0')",
+    "plainTextFaq": "\nCould not parse FAQ content for plain text display.\n",
+    "contentAnalysisScore": 43,
+    "contentWordCount": 226,
+    "seoImprovements": 0,
+    "smartQuestionsGenerated": 10,
+    "questionSources": "content-analysis,content-analysis,hybrid,content-analysis,content-analysis,content-analysis,content-analysis,content-analysis,content-analysis,content-analysis",
+    "contentFetchMethod": "firecrawl"
+  },
+  {
     "timestamp": "2025-05-22T16:35:49.363Z",
     "url": "https://www.cartac.com.tw/%E3%80%8C%E6%89%8B%E6%A9%9F%E8%B2%B8%E6%AC%BE%E3%80%8D%E5%A5%BD%E9%81%8E%E4%BB%B6%E5%97%8E%EF%BC%9F%E8%A7%A3%E6%9E%90%E3%80%8C%E6%89%8B%E6%A9%9F%E8%B2%B8%E6%AC%BE%E3%80%8D%E7%9A%84%E7%94%B3%E8%AB%8B/",
     "keywords": [

@@ -10,7 +10,6 @@
 
 import { OpenAI } from 'openai';
 import { z } from 'zod';
-import { AI_MODEL_CONFIGS } from '@/lib/ai-model-configs';
 
 const SerperPeopleAlsoAskItemSchema = z.object({
   question: z.string(),
@@ -35,7 +34,6 @@ const GenerateFAQSchemaInputSchema = z.object({
   articleType: z.string().optional().describe('The high‑level category of the article, used to pick question patterns.'),
   openRouterApiKey: z.string().min(1).describe('The OpenRouter API Key provided by the user.'),
 });
-// The input type for the generateFAQSchema function.
 
 export type GenerateFAQSchemaInput = z.infer<typeof GenerateFAQSchemaInputSchema>;
 
@@ -58,23 +56,14 @@ export async function generateFAQSchema(input: z.infer<typeof GenerateFAQSchemaI
       baseURL: 'https://openrouter.ai/api/v1'
     });
 
-    // Trim page content to keep the prompt lightweight (max 1 000 characters).
+    // Trim page content to keep the prompt lightweight (max 1000 characters).
     const trimmedContent =
       args.pageContent.length > 1000
         ? args.pageContent.slice(0, 1000) + '…'
         : args.pageContent;
 
-    const completion = await openai.chat.completions.create({
-      model: AI_MODEL_CONFIGS.GENERATE_FAQ_SCHEMA.model,
-      temperature: AI_MODEL_CONFIGS.GENERATE_FAQ_SCHEMA.temperature,
-      top_p: AI_MODEL_CONFIGS.GENERATE_FAQ_SCHEMA.top_p,
-      frequency_penalty: AI_MODEL_CONFIGS.GENERATE_FAQ_SCHEMA.frequency_penalty,
-      presence_penalty: AI_MODEL_CONFIGS.GENERATE_FAQ_SCHEMA.presence_penalty,
-      max_tokens: AI_MODEL_CONFIGS.GENERATE_FAQ_SCHEMA.max_tokens,
-      messages: [
-        {
-          role: 'system',
-          content: `你是一位專精於 SEO 與語音搜尋優化的 AI 助手。
+    // 🔧 修復：將 system instructions 合併到 user message 中
+    const systemInstructions = `你是一位專精於 SEO 與語音搜尋優化的 AI 助手。
 文章類型：${articleType}
 建議問句語氣（參考，可變形）：${patterns.join(' / ')}
 
@@ -83,16 +72,24 @@ export async function generateFAQSchema(input: z.infer<typeof GenerateFAQSchemaI
 2. 產出 **6** 個 FAQ，問題需使用自然對話語言，長度 12‑15 字，並盡量參考上方語氣。
 3. 每個答案第一句直接點題，總長度 75‑100 字；若屬情感／健康主題，結尾加入同理或實務建議。
 4. 先輸出符合 schema.org FAQPage 標準的 JSON‑LD；緊接一行 \`---\` 分隔，再輸出純文字 Q/A（同順序）。
-**只允許上述兩段輸出，勿再加入任何說明或前後綴。**`
-        },
-        {
-          role: 'user',
-          content: `Title Keywords: ${args.titleKeywords}
+**只允許上述兩段輸出，勿再加入任何說明或前後綴。**
+
+---
+
+Title Keywords: ${args.titleKeywords}
 Article Type: ${articleType}
 Page Content (truncated): ${trimmedContent}
 People Also Ask: ${JSON.stringify(args.peopleAlsoAsk)}
 
-Output the complete JSON-LD schema followed by '---' and the plain‑text FAQ.`
+請根據以上資訊，輸出完整的 JSON-LD schema，然後加上 '---' 分隔線，再輸出純文字 FAQ。`;
+
+    const completion = await openai.chat.completions.create({
+      model: 'google/gemma-3-27b-it:free',
+      temperature: 0.3,
+      messages: [
+        {
+          role: 'user',
+          content: systemInstructions
         }
       ]
     });
