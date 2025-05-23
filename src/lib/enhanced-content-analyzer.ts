@@ -137,7 +137,7 @@ export class EnhancedContentAnalyzer {
 }
 
 const content = completion.choices[0].message.content || '{}';
-      const jsonMatch = result.match(/\{[\s\S]*\}/);
+const jsonMatch = content.match(/\{[\s\S]*\}/);
       return JSON.parse(jsonMatch ? jsonMatch[0] : '{}');
     } catch (error) {
       console.error('Semantic analysis failed:', error);
