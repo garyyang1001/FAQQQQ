@@ -328,7 +328,10 @@ ${JSON.stringify(peopleAlsoAsk.map(item => item.question), null, 2)}
     });
     
     try {
-      const content = completion.choices[0].message.content || '{}';
+      if (!completion || !completion.choices || completion.choices.length === 0) {
+  throw new Error('AI API 未返回有效回應');
+}
+const content = completion.choices[0].message.content || '{}';
       const jsonMatch = content.match(/\{[\s\S]*\}/);
       const jsonString = jsonMatch ? jsonMatch[0] : '{}';
       return JSON.parse(jsonString);

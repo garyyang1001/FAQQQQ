@@ -131,7 +131,12 @@ export class EnhancedContentAnalyzer {
         ]
       });
 
-      const result = completion.choices[0].message.content || '{}';
+      if (!completion || !completion.choices || completion.choices.length === 0) {
+  console.error('AI API 回應格式異常:', completion);
+  throw new Error('AI API 未返回有效回應，請檢查 OpenRouter API Key');
+}
+
+const content = completion.choices[0].message.content || '{}';
       const jsonMatch = result.match(/\{[\s\S]*\}/);
       return JSON.parse(jsonMatch ? jsonMatch[0] : '{}');
     } catch (error) {
