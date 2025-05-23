@@ -1,5 +1,5 @@
 // src/components/EnhancedFaqPageWithProgress.tsx
-// 集成進度顯示的增強版 FAQ 頁面組件
+// 集成進度顯示的增強版 FAQ 頁面組件（修復 JSON 解析問題）
 
 'use client';
 
@@ -15,13 +15,56 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { Separator } from '@/components/ui/separator';
+import { Textarea } from '@/components/ui/textarea';
 import { CopyButton } from './copy-button';
 
 interface ProcessingState {
   isProcessing: boolean;
   sessionId: string | null;
   showProgress: boolean;
+}
+
+// 🔧 修復：清理 FAQ Schema 函數 - 移除 markdown 標記
+function cleanFaqSchema(rawSchema: string): string {
+  if (!rawSchema) return '';
+  
+  let cleaned = rawSchema.trim();
+  
+  // 移除開頭的 ```json 標記
+  cleaned = cleaned.replace(/^```json\s*/, '');
+  cleaned = cleaned.replace(/^```\s*/, '');
+  
+  // 移除結尾的 ``` 標記
+  cleaned = cleaned.replace(/```\s*$/, '');
+  
+  // 尋找並移除 --- 分隔符及其後的所有內容
+  const separatorIndex = cleaned.indexOf('---');
+  if (separatorIndex !== -1) {
+    cleaned = cleaned.substring(0, separatorIndex).trim();
+  }
+  
+  // 確保是有效的 JSON 格式
+  try {
+    const parsed = JSON.parse(cleaned);
+    return JSON.stringify(parsed, null, 2);
+  } catch (error) {
+    // 如果 JSON 解析失敗，嘗試提取 JSON 部分
+    const jsonStart = cleaned.indexOf('{');
+    const jsonEnd = cleaned.lastIndexOf('}');
+    
+    if (jsonStart !== -1 && jsonEnd !== -1 && jsonEnd > jsonStart) {
+      const extracted = cleaned.substring(jsonStart, jsonEnd + 1);
+      try {
+        const parsed = JSON.parse(extracted);
+        return JSON.stringify(parsed, null, 2);
+      } catch (retryError) {
+        console.warn('無法解析 JSON:', retryError);
+        return cleaned; // 返回原始內容而不是拋出錯誤
+      }
+    }
+    
+    return cleaned;
+  }
 }
 
 export default function EnhancedFaqPageWithProgress() {
@@ -61,16 +104,25 @@ export default function EnhancedFaqPageWithProgress() {
         showProgress: true
       });
 
+      console.log('🚀 前端開始 FAQ 生成流程，sessionId:', sessionId);
+
       // 呼叫後端處理，傳入 sessionId
       const response = await generateEnhancedFaqAction(values, sessionId);
       
+      console.log('📥 前端收到後端回應:', response);
+
       if (response.error) {
         setError(response.error);
       } else {
+        // 🔧 修復：清理 faqSchema 中的 markdown 標記
+        if (response.faqSchema) {
+          response.faqSchema = cleanFaqSchema(response.faqSchema);
+        }
         setResult(response);
+        console.log('✅ 前端設置結果成功');
       }
     } catch (err: any) {
-      console.error('處理錯誤:', err);
+      console.error('💥 前端處理錯誤:', err);
       setError(err.message || '發生未知錯誤');
     } finally {
       setProcessing({
@@ -116,7 +168,7 @@ export default function EnhancedFaqPageWithProgress() {
         {/* 標題區域 */}
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold text-gray-900 mb-4">
-            🚀 增強版 FAQ Schema Generator
+            🚀 FAQ Schema Generator
           </h1>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
             使用 AI 驅動的深度內容分析，生成高品質的 FAQ 結構化資料，提升您的 SEO 效果
@@ -156,6 +208,23 @@ export default function EnhancedFaqPageWithProgress() {
                     )}
                   </div>
 
+                  {/* Firecrawl API Key */}
+                  <div>
+                    <Label htmlFor="firecrawlApiKey">Firecrawl API Key</Label>
+                    <Input
+                      id="firecrawlApiKey"
+                      type="password"
+                      placeholder="fc-..."
+                      {...form.register('firecrawlApiKey')}
+                      disabled={processing.isProcessing}
+                    />
+                    {form.formState.errors.firecrawlApiKey && (
+                      <p className="text-sm text-red-500 mt-1">
+                        {form.formState.errors.firecrawlApiKey.message}
+                      </p>
+                    )}
+                  </div>
+
                   {/* OpenRouter API Key */}
                   <div>
                     <Label htmlFor="openRouterApiKey">OpenRouter API Key</Label>
@@ -186,23 +255,6 @@ export default function EnhancedFaqPageWithProgress() {
                     {form.formState.errors.serperApiKey && (
                       <p className="text-sm text-red-500 mt-1">
                         {form.formState.errors.serperApiKey.message}
-                      </p>
-                    )}
-                  </div>
-
-                  {/* Firecrawl API Key */}
-                  <div>
-                    <Label htmlFor="firecrawlApiKey">Firecrawl API Key</Label>
-                    <Input
-                      id="firecrawlApiKey"
-                      type="password"
-                      placeholder="fc-..."
-                      {...form.register('firecrawlApiKey')}
-                      disabled={processing.isProcessing}
-                    />
-                    {form.formState.errors.firecrawlApiKey && (
-                      <p className="text-sm text-red-500 mt-1">
-                        {form.formState.errors.firecrawlApiKey.message}
                       </p>
                     )}
                   </div>
@@ -290,13 +342,16 @@ export default function EnhancedFaqPageWithProgress() {
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <h3 className="text-lg font-semibold">JSON-LD FAQ Schema</h3>
-                          <CopyButton textToCopy={result.faqSchema}>
+                          <CopyButton textToCopy={result.faqSchema || ''}>
                             複製 Schema
                           </CopyButton>
                         </div>
-                        <pre className="bg-gray-100 p-4 rounded-lg text-sm overflow-x-auto max-h-96">
-                          <code>{JSON.stringify(JSON.parse(result.faqSchema), null, 2)}</code>
-                        </pre>
+                        <Textarea
+                          value={result.faqSchema || ''}
+                          readOnly
+                          className="min-h-[400px] font-mono text-sm"
+                          placeholder="JSON-LD Schema 將顯示在這裡..."
+                        />
                       </div>
                     </TabsContent>
 
@@ -305,13 +360,16 @@ export default function EnhancedFaqPageWithProgress() {
                       <div className="space-y-4">
                         <div className="flex items-center justify-between">
                           <h3 className="text-lg font-semibold">純文字 FAQ</h3>
-                          <CopyButton textToCopy={result.plainTextFaq}>
+                          <CopyButton textToCopy={result.plainTextFaq || ''}>
                             複製文字
                           </CopyButton>
                         </div>
-                        <div className="bg-gray-100 p-4 rounded-lg max-h-96 overflow-y-auto">
-                          <pre className="whitespace-pre-wrap text-sm">{result.plainTextFaq}</pre>
-                        </div>
+                        <Textarea
+                          value={result.plainTextFaq || ''}
+                          readOnly
+                          className="min-h-[400px] leading-relaxed"
+                          placeholder="純文字 FAQ 將顯示在這裡..."
+                        />
                       </div>
                     </TabsContent>
 
