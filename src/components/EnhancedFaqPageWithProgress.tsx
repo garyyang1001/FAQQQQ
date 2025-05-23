@@ -17,6 +17,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Textarea } from '@/components/ui/textarea';
 import { CopyButton } from './copy-button';
+import { Badge } from '@/components/ui/badge';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
+import { ChevronDown, ChevronRight } from 'lucide-react';
 
 interface ProcessingState {
   isProcessing: boolean;
@@ -75,6 +78,34 @@ export default function EnhancedFaqPageWithProgress() {
     sessionId: null,
     showProgress: false
   });
+
+  export default function EnhancedFaqPageWithProgress() {
+  const [result, setResult] = useState<any>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [processing, setProcessing] = useState<ProcessingState>({
+    isProcessing: false,
+    sessionId: null,
+    showProgress: false
+  });
+
+  // 🆕 添加這些新的狀態管理代碼
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({
+    beginner: false,
+    intermediate: false,
+    advanced: false,
+    seoDetails: false
+  });
+
+  const toggleSection = (section: string) => {
+    setExpandedSections(prev => ({
+      ...prev,
+      [section]: !prev[section]
+    }));
+  };
+
+  // 原有的其他代碼繼續...
+  const form = useForm<FaqFormValues>({
+    // ...
 
   const form = useForm<FaqFormValues>({
     resolver: zodResolver(faqFormSchema),
