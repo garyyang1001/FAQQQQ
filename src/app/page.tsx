@@ -1,9 +1,9 @@
-import { FaqPageContent } from '@/components/faq-page-content';
+import EnhancedFaqPageWithProgress from '@/components/EnhancedFaqPageWithProgress';
 
 export default function Home() {
   return (
     <main className="min-h-screen">
-      <FaqPageContent />
+      <EnhancedFaqPageWithProgress />
     </main>
   );
 }
